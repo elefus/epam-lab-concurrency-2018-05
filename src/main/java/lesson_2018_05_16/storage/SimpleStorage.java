@@ -11,34 +11,41 @@ import java.util.concurrent.TimeUnit;
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class SimpleStorage implements Storage {
     static final Object writerLock = new Object();
+    static final Object readerLock = new Object();
     volatile String string = "DEFAULT";
-    volatile int nowWriting;
-
-    @Override
-    @SneakyThrows
-    public void setString(final String string) {
-        synchronized (writerLock) {
-            nowWriting++;
-            TimeUnit.SECONDS.sleep(1);
-            this.string = string;
-            if (nowWriting-- == 0) {
-                writerLock.notifyAll();
-            }
-        }
-    }
+    volatile boolean nowWriting;
 
     @Override
     @SneakyThrows
     public String getString() {
         String result;
-        synchronized (writerLock) {
-            if (nowWriting != 0) {
-                writerLock.wait();
-            }
+        if (!nowWriting) {
             TimeUnit.SECONDS.sleep(1);
             result = string;
+        } else {
+            synchronized (writerLock) {
+                while (nowWriting) {
+                    writerLock.wait();
+                }
+                TimeUnit.SECONDS.sleep(1);
+                result = string;
+            }
         }
         return result;
+    }
+
+    @Override
+    @SneakyThrows
+    public void setString(final String string) {
+        synchronized (writerLock) {
+            nowWriting = true;
+            TimeUnit.SECONDS.sleep(1);
+            this.string = string;
+            if (nowWriting) {
+                nowWriting = false;
+                writerLock.notifyAll();
+            }
+        }
     }
 }
 
