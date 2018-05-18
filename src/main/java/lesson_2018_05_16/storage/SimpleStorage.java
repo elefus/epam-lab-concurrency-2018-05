@@ -20,18 +20,16 @@ public class SimpleStorage implements Storage {
     @SneakyThrows
     public String getString() {
         String result;
-        synchronized (readerLock) {
-            synchronized (writerLock) {
-                if (nowWriting != 0) {
-                    writerLock.wait();
-                }
-                nowReading++;
-                TimeUnit.SECONDS.sleep(1);
-                result = string;
-                nowReading--;
+        synchronized (writerLock) {
+            if (nowWriting != 0) {
+                writerLock.wait();
             }
-            return result;
+            nowReading++;
+            TimeUnit.SECONDS.sleep(1);
+            result = string;
+            nowReading--;
         }
+        return result;
     }
 
     @Override
