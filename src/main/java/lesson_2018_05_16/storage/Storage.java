@@ -1,16 +1,8 @@
 package lesson_2018_05_16.storage;
 
-public class Storage {
+public interface Storage {
 
-    private volatile String string = "DEAFAULT";
+    String getString();
 
-    public void setString(String newValue) {
-        // TODO
-        throw new UnsupportedOperationException();
-    }
-
-    public String getString() {
-        // TODO
-        throw new UnsupportedOperationException();
-    }
+    void setString(final String string);
 }
